@@ -1,0 +1,1 @@
+PASS GapM5 R6: Packet=235 bytes, right-button start, 10s attract, 2P demo, capture/rescue, wave clear, R4 panel unchanged
