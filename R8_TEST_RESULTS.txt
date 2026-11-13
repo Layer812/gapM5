@@ -1,0 +1,5 @@
+COMMAND: g++ -std=c++17 -Wall -Wextra -Werror -O2 tests/test_core.cpp src/game_core.cpp src/net_protocol.cpp
+RESULT: PASS
+PASS GapM5 R8: Packet=235 bytes, 1.4x demo, paired bezier afterimages, capture/rescue, R4 panel unchanged
+PlatformIO ESP32-S3 build: NOT RUN (toolchain not available in this environment)
+Real StopWatch two-device synchronization: NOT YET TESTED for R8

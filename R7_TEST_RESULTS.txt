@@ -1,0 +1,1 @@
+PASS: host g++ -std=c++17 -Wall -Wextra -Werror -O2. Tested packet 235B, HELLO retry/session bootstrap logic, mirror demo state, curved/straight flight, capture/rescue, wave completion. Device build/hardware not run.
