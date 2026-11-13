@@ -4,6 +4,7 @@
 #include "../src/net_protocol.hpp"
 #include "../src/session_rules.hpp"
 #include "../src/link_rules.hpp"
+#include "../src/feedback_rules.hpp"
 #include <cassert>
 #include <cmath>
 #include <iostream>
@@ -14,6 +15,9 @@ static void advance(gm::State& s,float sec,int8_t p1=0,int8_t p2=0){
 int main(){
   using namespace gm;
   assert(sizeof(proto::Packet)<=250 && sizeof(proto::Packet)==235);
+  assert(!feedback::allowVibration(gm::DEMO));
+  assert(feedback::allowVibration(gm::PLAY));
+  assert(feedback::allowVibration(gm::CLEAR));
   assert(proto::VER==2); // Same packet format as R6, no mixed-protocol lobby.
   // In R6 HELLO stopped after one-sided discovery: drop that first HELLO
   // and the other watch could never join. R7 always re-advertises.
@@ -180,6 +184,7 @@ int main(){
   advance(demo,1.8f);
   assert(demo.players[0].status==P_ALIVE && demo.players[1].status==P_ALIVE);
   assert(demo.players[0].power>0 && demo.players[1].power>0);
+  assert(demo.players[0].score==2200 && demo.players[1].score==1900);
   // HOST -> GUEST snapshot sends demo time, stage counts and both ships.
   // On guest, reconstruct the same trail solely from packet-derived fields.
   const float guestTrail0=demoTrailBearing(demo.enemies[1].angle,demo.enemies[1].radius,1,
@@ -189,6 +194,9 @@ int main(){
   assert(guest.phase==DEMO && guest.playersActive==2);
   assert(fabsf(guest.demoTime-demo.demoTime)<.11f);
   assert(guest.destroyed==demo.destroyed && guest.waveQuota==demo.waveQuota);
+  assert(guest.players[0].score==demo.players[0].score);
+  assert(guest.players[1].score==demo.players[1].score);
+  assert(guest.players[0].power>0 && guest.players[1].power>0);
   assert(angularDistance(guest.players[1].angle,demo.players[1].angle)<.0002f);
   const float guestTrail1=demoTrailBearing(guest.enemies[1].angle,guest.enemies[1].radius,1,
                                           fmaxf(8.f,guest.enemies[1].radius-12.f));
@@ -203,6 +211,6 @@ int main(){
   start(solo,true,998);
   assert(solo.phase==COUNTDOWN && solo.playersActive==1 && solo.players[1].status==P_DEAD);
 
-  std::cout<<"PASS GapM5 R8: Packet="<<sizeof(proto::Packet)
-           <<" bytes, 1.4x demo, paired bezier afterimages, capture/rescue, R4 panel unchanged\n";
+  std::cout<<"PASS GapM5 R9: Packet="<<sizeof(proto::Packet)
+           <<" bytes, 2P demo rescue reward mirrored, vibration gate, core and link rules\n";
 }

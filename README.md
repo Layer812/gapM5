@@ -4,66 +4,59 @@
 
 # GapM5 — ギャップエムファイブ
 
-**Co-op rescue shooter for two M5Stack StopWatch devices over ESP-NOW**
+**An original circular co-op rescue shooter for M5Stack StopWatch**
 
-[日本語 README](README_JA.md) · [Source license](LICENSE) · [Asset rights](ASSET_LICENSE.md)
+[日本語](README_JA.md) · [License](LICENSE) · [Artwork and music](ASSET_LICENSE.md)
 
 </div>
 
-## About the game
+## About GapM5
 
-Two ships move in either direction on the **same circular orbital track**,
-without passing through one another while both are active. They automatically
-fire toward the center. Enemies emerge from the center on straight or curved
-trajectories, disappear offscreen, and may dive back toward the center.
-A tractor beam can capture one ship; its partner can shoot down the captor
-to rescue it and trigger a cooperative power-up.
+Two spacecraft share **one circular orbit**. Move freely to the left or right,
+but while both ships are active, **neither can overtake the other**. Fire
+continuously toward the center as waves of enemies emerge along straight and
+curved paths, vanish offscreen and return for another attack.
 
-## Controls and demo
+An enemy's tractor beam can capture a player. The other pilot can shoot down
+the captor to rescue their partner; **both ships receive a temporary power-up**.
+Clear each wave by defeating the enemies or surviving their repeated attacks.
 
-| State | Right physical button |
-|:--|:--|
-| Awaiting ESP-NOW partner | Start single-player |
-| Connected to partner | Start co-op on both devices |
-| Attract demo | Start a new game |
-| Game over | Restart |
+## Play
 
-- **Left / right buttons while playing:** move around the circular track
-- **No start input for 10 seconds:** automatic synchronized attract demo if paired, or solo demo otherwise
-- **Both buttons held for 3 seconds:** force an AMOLED refresh (black-screen recovery)
-- **Firing:** automatic, radially inward
+| Situation | Right button |
+|---|---|
+| Waiting for a partner | Start single-player |
+| Connected over ESP-NOW | Start two-player co-op |
+| Attract demo | Start playing |
+| Game over | Play again |
 
-**Both devices must run R8** for synchronized demo speed and identical visuals.
-R8 retains R4's on-device AMOLED recovery that restored display on the second
-StopWatch, as well as the host-authoritative ESP-NOW protocol (v2, 235 bytes).
+- **Left / right buttons:** travel in either direction along the orbit
+- **Shooting:** automatic, toward the center
+- **After 10 seconds without starting:** a solo or synchronized co-op demo begins automatically
+- **Capture and rescue:** the untrapped pilot can free their partner by destroying the captor
+- **Demo mode:** shows co-op movement, capture, rescue, and teamwork without vibration
 
-## Build and flash (Windows, PlatformIO)
+No Wi-Fi router or internet connection is required for two-player ESP-NOW play.
 
-Hardware: M5Stack StopWatch / ESP32-S3R8, 16MB flash, 8MB PSRAM. PlatformIO
-Espressif32 v6.12.0; M5Unified & M5GFX v0.3.0; `BOARD_ID=30`.
+## Build (Windows / PlatformIO)
+
+For M5Stack StopWatch (ESP32-S3, 16 MB flash, 8 MB PSRAM):
 
 ```bat
 RUN_BUILD_ONLY.cmd
 RUN_BUILD_FLASH_APP_ONLY.cmd COM13
 ```
 
-Replace `COM13` with the **actual port on each device**. The flash helper reads
-the device's real partition table and boot selection, then writes **only the
-currently bootable APP partition**. It never erases NVS, otadata, SPIFFS,
-bootloader or the partition table. Do not use `erase_flash`.
+Replace `COM13` with your device's actual serial port. The supplied flashing
+script writes **the selected application partition only**; it does not erase
+saved storage, bootloader, partition table or OTA settings. Never run a full
+flash erase to install this game.
 
-## Testing and status
+## Rights and credits
 
-- R4: AMOLED display recovery and ESP-NOW pairing confirmed on two physical StopWatch units by the project owner.
-- R7/R8: Linux host C++ logic tests passed for curved enemy motion, co-op simulation and packet format.
-- R8 ESP32-S3 build and physical two-device gameplay: **not independently verified for this release**.
+- **Original source code:** [MIT License](LICENSE), Copyright © 2026 LAYER8
+- **Artwork, posters, and original music:** © 2026 LAYER8, all rights reserved; see [asset terms](ASSET_LICENSE.md)
+- **Third-party libraries:** subject to their own licenses; see [notices](THIRD_PARTY_NOTICES.md)
 
-## Licensing
-
-**Original software source:** [MIT License](LICENSE), **Copyright © 2026 LAYER8**.
-**Artwork / posters / original music:** © 2026 LAYER8, all rights reserved;
-see [ASSET_LICENSE.md](ASSET_LICENSE.md). Dependency licenses are separate;
-see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
-
-GapM5 is an original project inspired by the feel of vintage space arcade games.
-It is not affiliated with or endorsed by any historical game publisher.
+GapM5 is an independent original game, not affiliated with or endorsed by any
+arcade game publisher.

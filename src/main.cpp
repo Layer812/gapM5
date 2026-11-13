@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 LAYER8.
-// GapM5 R8: 1.40x synced demo with quadratic trails; R4 boot retained.
+// GapM5 R9: clean space background, symmetric demo rescue bonus, silent demo haptics.
 // Boot is based on bikeM5 R24's known display-success native sequence.
 #include <Arduino.h>
 #include <M5Unified.h>
@@ -10,6 +10,7 @@
 #include "net_link.hpp"
 #include "draw_game.hpp"
 #include "music.hpp"
+#include "feedback_rules.hpp"
 
 #if !defined(BOARD_ID) || BOARD_ID != 30
 #error "GapM5 only supports the M5Stack StopWatch (BOARD_ID=30)"
@@ -47,7 +48,7 @@ void refreshPanel(const char* reason) {
   lcd.display(0, 0, lcd.width(), lcd.height());
   lcd.waitDisplay();
   ++displayRecoveryCount;
-  Serial.printf("[GapM5 R8] display refresh #%u: %s\n",
+  Serial.printf("[GapM5 R9] display refresh #%u: %s\n",
                 displayRecoveryCount, reason);
 }
 
@@ -61,7 +62,7 @@ void firstDisplay() {
   lcd.setTextDatum(middle_center);
   lcd.setFont(&fonts::Font4);
   lcd.setTextColor(TFT_WHITE,TFT_BLACK);
-  lcd.drawString("GapM5 R7",w/2,h/2-52);
+  lcd.drawString("GapM5 R9",w/2,h/2-52);
   lcd.setFont(&fonts::Font2);
   lcd.setTextColor(0x5BFF,TFT_BLACK);
   lcd.drawString("RADIAL CO-OP SHOOTER",w/2,h/2-10);
@@ -79,7 +80,7 @@ void setup() {
   Serial.begin(115200);
   delay(750);  // Give PMIC/IO expander an extra settling interval.
   const esp_partition_t* runningApp=esp_ota_get_running_partition();
-  Serial.printf("[GapM5 R8] APP %s @ 0x%lx\n",
+  Serial.printf("[GapM5 R9] APP %s @ 0x%lx\n",
                 runningApp?runningApp->label:"?",
                 static_cast<unsigned long>(runningApp?runningApp->address:0));
   auto cfg=M5.config();
@@ -94,18 +95,18 @@ void setup() {
   cfg.internal_mic=false;
   cfg.external_imu=false;
   cfg.external_rtc=false;
-  Serial.println("[GapM5 R7 BOOT] before M5.begin");
+  Serial.println("[GapM5 R9 BOOT] before M5.begin");
   M5.begin(cfg);   // The single owner of power/panel initialization.
-  Serial.println("[GapM5 R7 BOOT] M5.begin returned");
+  Serial.println("[GapM5 R9 BOOT] M5.begin returned");
   M5.Display.setRotation(0);
   M5.Display.setBrightness(200);
   const int w=M5.Display.width(),h=M5.Display.height();
-  Serial.printf("[GapM5 R7 BOOT] board=%d LCD=%dx%d PSRAM=%lu Flash=%lu\n",
+  Serial.printf("[GapM5 R9 BOOT] board=%d LCD=%dx%d PSRAM=%lu Flash=%lu\n",
                 int(M5.getBoard()),w,h,
                 static_cast<unsigned long>(ESP.getPsramSize()),
                 static_cast<unsigned long>(ESP.getFlashChipSize()));
   if(w<400 || h<400){
-    Serial.println("[GapM5 R7 BOOT] invalid display: safe stop");
+    Serial.println("[GapM5 R9 BOOT] invalid display: safe stop");
     return;
   }
   firstDisplay();  // Must happen before radio/audio/PSRAM assets.
@@ -114,15 +115,15 @@ void setup() {
   delay(180);
   refreshPanel("settled");
   lcdReady=true;
-  Serial.println("[GapM5 R7 BOOT] blue boot frame drawn");
+  Serial.println("[GapM5 R9 BOOT] blue boot frame drawn");
   delay(550);
   // M5Unified handles vibration through the StopWatch power driver.
   M5.Power.setVibration(0);
   const bool networkOkay=radioLink.begin();
-  Serial.printf("[GapM5 R8] ESP-NOW %s; HELLO channel=1\n",networkOkay?"ready":"failed");
+  Serial.printf("[GapM5 R9] ESP-NOW %s; HELLO channel=1\n",networkOkay?"ready":"failed");
   bgm.begin();
   refreshPanel("after speaker");
-  Serial.printf("[GapM5 R8] speaker %s\n",bgm.playing()?"ready":"muted");
+  Serial.printf("[GapM5 R9] speaker %s\n",bgm.playing()?"ready":"muted");
   lastLogic=millis();lastDraw=lastLogic;introStarted=lastLogic;
 }
 
@@ -173,7 +174,7 @@ void loop() {
               (havePeer && connected && isHost && remoteStart)) {
       gm::start(game,false,now^0x6d5345u);
       observedEvent=0;
-      Serial.println("[GapM5 R8] CO-OP START / right button");
+      Serial.println("[GapM5 R9] CO-OP START / right button");
     }
   }
   // Ten seconds of no START opens a non-interactive attract demo whether
@@ -182,7 +183,7 @@ void loop() {
                              !radioLink.hasPartner() || radioLink.isHost())) {
     gm::beginDemo(game,!radioLink.hasPartner(),now^0xDE065u);
     observedEvent=0;
-    Serial.println("[GapM5 R8] DEMO starts automatically at 10 seconds");
+    Serial.println("[GapM5 R9] DEMO starts automatically at 10 seconds");
   }
   isSolo=radioLink.isSolo();
   if(now-lastLogic>=16){
@@ -198,11 +199,16 @@ void loop() {
     if(game.phase!=gm::WAIT && game.event!=observedEvent){
       observedEvent=game.event;
       bgm.event(game.eventType);
-      M5.Power.setVibration(game.eventType==3?165:90);
-      vibrateUntil=now+(game.eventType==3?230:100);
+      if(feedback::allowVibration(game.phase)) {
+        M5.Power.setVibration(game.eventType==3?165:90);
+        vibrateUntil=now+(game.eventType==3?230:100);
+      }
     }
   }
-  if(vibrateUntil && static_cast<int32_t>(now-vibrateUntil)>=0){
+  // The attract demo is silent to the vibration motor, even if a rumble
+  // was already active when the user returned to the waiting/demo screen.
+  if(vibrateUntil && (game.phase==gm::DEMO ||
+      static_cast<int32_t>(now-vibrateUntil)>=0)) {
     M5.Power.setVibration(0);
     vibrateUntil=0;
   }

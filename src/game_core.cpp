@@ -148,7 +148,11 @@ void demoTick(State& s,float dt) {
       // Maintain separation while visibly sweeping a whole sector together.
       s.players[0].angle=1.79f+.24f*together;
       s.players[1].angle=2.38f+.24f*together;
-      s.players[0].power=1.0f;s.players[1].power=1.0f;
+      // Attract-mode rescue: reward both partners and show the power-up.
+      // Do not alter scores or real rescue rules outside the DEMO state.
+      s.players[0].power=3.5f;s.players[1].power=3.5f;
+      s.players[0].score+=1000;
+      s.players[1].score+=1000;
       s.destroyed=9;
     }
     for(int i=0;i<5;++i)

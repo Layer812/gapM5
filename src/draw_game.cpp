@@ -98,15 +98,10 @@ void inboundWarning(lgfx::LGFX_Device& g,const gm::Enemy& e,uint32_t frame) {
 }
 void background(lgfx::LGFX_Device& g,uint32_t frame) {
   g.fillScreen(BG);
-  const int outer=len(229);
-  g.drawCircle(CX,CY,outer,BLUE_D);
-  g.drawCircle(CX,CY,outer-2,GRID2);
-  for(int r=47;r<=200;r+=42)g.drawCircle(CX,CY,len(float(r)),GRID);
-  for(int i=0;i<24;++i){
-    const float a=i*gm::TAU/24;
-    const float cs=cosf(a),sn=sinf(a);
-    line(g,cs*35,sn*35,cs*222,sn*222,GRID2);
-  }
+  // Keep the space unobstructed: no radial spokes or concentric grid.
+  // One unobtrusive pilot-orbit reference is enough to show shared movement.
+  g.drawCircle(CX,CY,len(229),BLUE_D);
+  g.drawCircle(CX,CY,len(gm::RING),GRID);
   // Original procedural stars. The radial movement sells the 3-D depth.
   for(int i=0;i<60;++i) {
     const float a=gm::wrap((i*2.39996f)+(i%6)*.018f);
@@ -153,11 +148,19 @@ void hud(lgfx::LGFX_Device& g,const gm::State& s,const char* role,bool paired,
       (t<9.0f?"1P CAPTURED!":
       (t<11.5f?"2P TO RESCUE":"RESCUE BONUS!"))));
     txt(g,message,0,42,(t>=6.5f&&t<11.5f)?ORANGE:WHITE,&fonts::Font4);
-    txt(g,paired&&online?"RIGHT: START 2P":"RIGHT: START SOLO",0,102,GOLD,&fonts::Font4);
+    const bool rescueBonus=s.playersActive==2 && t>=11.5f;
+    if(rescueBonus){
+      // Both pilots receive the rescue reward in the attract demonstration.
+      // Snapshot scores are shown above; this label remains symmetric on 2P.
+      txt(g,"1P +1000    2P +1000",0,84,GOLD,&fonts::Font2);
+      txt(g,"BOTH SHIPS POWER UP!",0,108,WHITE,&fonts::Font2);
+    }
+    txt(g,paired&&online?"RIGHT: START 2P":"RIGHT: START SOLO",
+        0,rescueBonus?144:102,GOLD,&fonts::Font4);
     if(paired && online){
-      txt(g,"SYNCHRONIZED 2P",0,151,GOLD,&fonts::Font2);
+      txt(g,"SYNCHRONIZED 2P",0,rescueBonus?174:151,GOLD,&fonts::Font2);
       txt(g,role,0,-166,BLUE,&fonts::Font2);
-    } else txt(g,"DEMO REPEATS",0,150,BLUE,&fonts::Font2);
+    } else txt(g,"DEMO REPEATS",0,rescueBonus?174:150,BLUE,&fonts::Font2);
     return;
   }
   snprintf(tmp,sizeof(tmp),"WAVE %02u",s.wave);

@@ -36,6 +36,10 @@ void unpack(const Packet& m,gm::State& s) {
   for(int i=0;i<2;++i){
     auto& p=s.players[i];p.lives=m.lives[i];p.status=m.status[i];
     p.angle=decodeAngle(m.position[i]);p.score=m.score[i];
+    // DEMO's cooperative rescue bonus is deterministic from the host's
+    // timeline; derive it on GUEST without changing the wire format.
+    p.power=(s.phase==gm::DEMO && s.playersActive==2 && s.demoTime>=11.5f)
+          ?3.5f:0.0f;
   }
   for(int i=0;i<gm::MAX_ENEMY;++i){
     auto& e=s.enemies[i];const auto& o=m.enemies[i];
