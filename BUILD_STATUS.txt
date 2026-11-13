@@ -1,1 +1,1 @@
-GapM5 R9: source updates: background without spiderweb grid; 2P attract-mode rescue rewards on both pilots; demo vibration disabled; public Japanese/English README refined. Host test status pending. Hardware build and two-watch test unverified.
+GapM5 R9: host C++ game logic / packet tests PASS (235 bytes); simplified background grid, synchronized 1P/2P demo rescue reward, demo vibration disabled, public Japanese/English README refined. ESP32-S3 PlatformIO cross-build and physical two-watch gameplay not yet verified.
